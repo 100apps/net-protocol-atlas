@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吃透网络协议 · 全图谱实验室 — Net Protocol Atlas</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>🌐 吃透网络协议 · 全图谱实验室</h1>
+    <p class="sub">Net Protocol Atlas — <span id="stat-count">加载中…</span> 个协议 · 搜索 / 图谱 / 模拟器 / 握手动画 / 报文解析 / 子网计算 / 协议之旅 / 测验</p>
+  </div>
+  <a class="gh" href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="theater" class="active">★ 协议剧场 Packet Theater</button>
+  <button data-tab="atlas">① 协议全图谱</button>
+  <button data-tab="encap">② 报文封装模拟器</button>
+  <button data-tab="handshake">③ TCP 握手动画</button>
+  <button data-tab="parser">④ 十六进制报文解析</button>
+  <button data-tab="subnet">⑤ 子网计算器</button>
+  <button data-tab="journey">⑥ 协议之旅</button>
+  <button data-tab="quiz">⑦ 测验模式</button>
+</nav>
+
+<main>
+<!-- 0 Packet Theater -->
+<section id="panel-theater" class="panel active">
+  <h2>🎬 协议剧场 Packet Theater</h2>
+  <p class="hint">不只是看图：选一个真实场景，一步步「演」完它——时序图、类 Wireshark 数据包列表、分层包详情与 hex 转储全程同步。先选场景，再播放/步进；点任意数据包行看它逐层拆开的样子。</p>
+  <div class="row">
+    <button data-sc="https" class="active">场景 A · HTTPS 访问（10 步）</button>
+    <button data-sc="http">场景 B · 纯 HTTP（明文对比）</button>
+    <button data-sc="dns">场景 C · DNS + UDP 查询</button>
+  </div>
+  <h3 id="th-title"></h3>
+  <div class="row th-controls">
+    <button id="th-play" class="primary">▶ 播放</button>
+    <button id="th-prev">◀ 上一步</button>
+    <button id="th-next">下一步 ▶</button>
+    <button id="th-reset">↺ 重置</button>
+    <span id="th-progress" class="hint"></span>
+  </div>
+  <div id="th-nodes" class="nodes"></div>
+  <div class="theater-grid">
+    <div>
+      <h4>时序图（当前步高亮）</h4>
+      <div id="th-seq" class="seqbox"></div>
+      <h4>数据包列表（点击行查看分层解析 + hex）</h4>
+      <div class="pkt-wrap"><table class="pkt"><thead><tr><th>序号</th><th>时间(s)</th><th>源</th><th>目标</th><th>协议</th><th>长度</th><th>信息</th></tr></thead><tbody id="th-packets"></tbody></table></div>
+    </div>
+    <aside>
+      <h4>步骤详情</h4>
+      <div id="th-step-detail" class="step-detail"></div>
+      <h4>数据包详情</h4>
+      <div id="th-packet-detail"><p class="hint">点击底部任意数据包行，这里会显示该包的 Ethernet / IP / 传输层 / 应用层字段解析与 hex 转储。</p></div>
+    </aside>
+  </div>
+</section>
+
+<!-- 1 Atlas -->
+<section id="panel-atlas" class="panel">
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="搜索协议名 / 端口 / RFC / 关键词，如 quic、443、RFC 9000…">
+    <select id="filter-layer"><option value="">全部 OSI 层</option></select>
+    <select id="filter-cat"><option value="">全部分类</option></select>
+    <select id="filter-depth"><option value="">全部深度</option><option value="core">核心协议（含报文头详解）</option><option value="standard">标准协议</option></select>
+  </div>
+  <p id="atlas-count" class="hint"></p>
+  <div id="grid" class="grid"></div>
+</section>
+
+<!-- 2 Encap -->
+<section id="panel-encap" class="panel">
+  <h2>报文封装模拟器</h2>
+  <p class="hint">选择各层协议与载荷大小，计算头部开销、总长度与 MTU 分片。</p>
+  <div class="form-grid">
+    <label>应用层 <select id="enc-app"><option value="0">无</option><option value="0" data-name="HTTP/1.1 头部(估算 300B)" data-extra="300">HTTP/1.1（头部估算 300B）</option><option value="0" data-name="DNS 报文(估算 30B)" data-extra="30">DNS（估算 30B）</option><option value="0" data-name="MQTT PUBLISH(估算 20B)" data-extra="20">MQTT（估算 20B）</option></select></label>
+    <label>传输层 <select id="enc-trans"><option value="8" data-name="UDP 头 8B">UDP（8B）</option><option value="20" data-name="TCP 头 20B">TCP（20B）</option><option value="12" data-name="SCTP 头 12B+块">SCTP（12B）</option><option value="28" data-name="QUIC 短头+TLS记录(估算)">QUIC（约 28B）</option></select></label>
+    <label>网络层 <select id="enc-net"><option value="20" data-name="IPv4 头 20B">IPv4（20B）</option><option value="40" data-name="IPv6 头 40B">IPv6（40B）</option><option value="48" data-name="IPv4+VXLAN封装外层(20+8+8+20内层以太另计)">IPv4 + VXLAN 外层封装</option></select></label>
+    <label>链路层 <select id="enc-link"><option value="18" data-name="Ethernet II 14B+FCS 4B">Ethernet II（14+4B）</option><option value="22" data-name="Ethernet+VLAN 18B+FCS 4B">Ethernet + VLAN（18+4B）</option></select></label>
+    <label>载荷字节 <input id="enc-payload" type="number" value="1000" min="0" max="100000"></label>
+    <label>MTU <input id="enc-mtu" type="number" value="1500" min="68" max="9000"></label>
+  </div>
+  <button id="enc-run" class="primary">计算封装</button>
+  <div id="enc-stack" class="stack"></div>
+  <pre id="enc-result" class="result"></pre>
+</section>
+
+<!-- 3 Handshake -->
+<section id="panel-handshake" class="panel">
+  <h2>TCP 三次握手 / 四次挥手</h2>
+  <div class="hs-controls">
+    <button id="hs-open" class="primary">开始三次握手</button>
+    <button id="hs-step">下一步 ▶</button>
+    <button id="hs-close">开始四次挥手</button>
+    <button id="hs-reset">重置</button>
+  </div>
+  <div class="hs-board">
+    <div class="host"><h3>客户端</h3><div id="hs-client-state" class="state">CLOSED</div><div id="hs-client-seq" class="seq">seq = —</div></div>
+    <div class="hs-log-wrap"><ol id="hs-log" class="log"></ol><p id="hs-desc" class="hint">点击「开始三次握手」后逐步推进，观察序号与状态变化。</p></div>
+    <div class="host"><h3>服务端</h3><div id="hs-server-state" class="state">LISTEN</div><div id="hs-server-seq" class="seq">seq = —</div></div>
+  </div>
+</section>
+
+<!-- 4 Parser -->
+<section id="panel-parser" class="panel">
+  <h2>十六进制报文解析器</h2>
+  <p class="hint">支持解析 Ethernet II / IPv4 / IPv6 / TCP / UDP / ICMP。点示例按钮载入，或粘贴你自己的 hex（可含空格）。</p>
+  <div class="row">
+    <button data-sample="ipv4tcp">示例：IPv4 + TCP SYN</button>
+    <button data-sample="ipv4udp">示例：IPv4 + UDP DNS</button>
+    <button data-sample="ipv6tcp">示例：IPv6 + TCP</button>
+    <button data-sample="icmp">示例：IPv4 + ICMP Echo</button>
+  </div>
+  <textarea id="parse-input" rows="5" placeholder="例如：00 11 22 33 44 55 66 77 88 99 aa bb 08 00 45 00 ..."></textarea>
+  <button id="parse-run" class="primary">解析报文</button>
+  <div id="parse-result"></div>
+</section>
+
+<!-- 5 Subnet -->
+<section id="panel-subnet" class="panel">
+  <h2>IPv4 子网计算器</h2>
+  <div class="row"><input id="subnet-input" value="192.168.1.37/26" size="24"><button id="subnet-run" class="primary">计算</button></div>
+  <pre id="subnet-result" class="result"></pre>
+</section>
+
+<!-- 6 Journey -->
+<section id="panel-journey" class="panel">
+  <h2>「输入 URL 到页面打开」协议之旅</h2>
+  <div class="row"><input id="journey-url" value="https://example.com/index.html" size="40"><button id="journey-run" class="primary">开始旅程</button></div>
+  <ol id="journey-list" class="journey"></ol>
+</section>
+
+<!-- 7 Quiz -->
+<section id="panel-quiz" class="panel">
+  <h2>测验模式（从数据集自动出题）</h2>
+  <p class="hint">题目类型：协议所在层、常用端口。共 10 题。</p>
+  <button id="quiz-start" class="primary">开始测验</button>
+  <div id="quiz-box"></div>
+  <p id="quiz-score" class="score"></p>
+</section>
+</main>
+
+<!-- Detail drawer -->
+<div id="drawer" class="drawer" hidden>
+  <button id="drawer-close" aria-label="关闭">✕ 关闭</button>
+  <div id="drawer-body"></div>
+</div>
+
+<footer>Net Protocol Atlas · MIT License · 数据：<code>data/protocols.js</code>（与 protocols.json 同源）· 纯静态零依赖，file:// 与 GitHub Pages 均可运行。</footer>
+<script src="data/protocols.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/theater.js"></script>
+</body>
+</html>
