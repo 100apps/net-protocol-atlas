@@ -1,0 +1,25 @@
+name: validate
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate dataset
+        run: python scripts/validate_data.py
+      - name: CLI smoke test
+        run: |
+          python tools/netproto.py stats
+          python tools/netproto.py list --layer 4
+          python tools/netproto.py search quic
+          python tools/netproto.py info tcp
+          python tools/netproto.py subnet 192.168.1.37/26
+          python tools/netproto.py quiz --no-interactive
+      - name: JS syntax check
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node --check assets/app.js && node --check data/protocols.js
