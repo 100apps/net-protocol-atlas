@@ -78,15 +78,16 @@
   <h2>报文封装模拟器</h2>
   <p class="hint">选择各层协议与载荷大小，计算头部开销、总长度与 MTU 分片。</p>
   <div class="form-grid">
-    <label>应用层 <select id="enc-app"><option value="0">无</option><option value="0" data-name="HTTP/1.1 头部(估算 300B)" data-extra="300">HTTP/1.1（头部估算 300B）</option><option value="0" data-name="DNS 报文(估算 30B)" data-extra="30">DNS（估算 30B）</option><option value="0" data-name="MQTT PUBLISH(估算 20B)" data-extra="20">MQTT（估算 20B）</option></select></label>
-    <label>传输层 <select id="enc-trans"><option value="8" data-name="UDP 头 8B">UDP（8B）</option><option value="20" data-name="TCP 头 20B">TCP（20B）</option><option value="12" data-name="SCTP 头 12B+块">SCTP（12B）</option><option value="28" data-name="QUIC 短头+TLS记录(估算)">QUIC（约 28B）</option></select></label>
-    <label>网络层 <select id="enc-net"><option value="20" data-name="IPv4 头 20B">IPv4（20B）</option><option value="40" data-name="IPv6 头 40B">IPv6（40B）</option><option value="48" data-name="IPv4+VXLAN封装外层(20+8+8+20内层以太另计)">IPv4 + VXLAN 外层封装</option></select></label>
-    <label>链路层 <select id="enc-link"><option value="18" data-name="Ethernet II 14B+FCS 4B">Ethernet II（14+4B）</option><option value="22" data-name="Ethernet+VLAN 18B+FCS 4B">Ethernet + VLAN（18+4B）</option></select></label>
+    <label>应用层 <select id="enc-app"><option value="0" data-name="无应用头">无</option><option value="0" data-name="HTTP/1.1 头部（估算）" data-extra="300">HTTP/1.1（头部估算 300B）</option><option value="0" data-name="DNS 报文（估算）" data-extra="30">DNS（估算 30B）</option><option value="0" data-name="MQTT PUBLISH（估算）" data-extra="20">MQTT（估算 20B）</option></select></label>
+    <label>传输层 <select id="enc-trans"><option value="8" data-name="UDP 头">UDP（8B）</option><option value="20" data-name="TCP 头">TCP（20B）</option><option value="12" data-name="SCTP 头">SCTP（12B）</option><option value="28" data-name="QUIC 短头+TLS 记录（估算）">QUIC（约 28B）</option></select></label>
+    <label>网络层 <select id="enc-net"><option value="20" data-name="IPv4 头">IPv4（20B）</option><option value="40" data-name="IPv6 头">IPv6（40B）</option><option value="48" data-name="IPv4+VXLAN 外层封装">IPv4 + VXLAN 外层封装</option></select></label>
+    <label>链路层 <select id="enc-link"><option value="18" data-name="Ethernet II（含 FCS）">Ethernet II（14+4B）</option><option value="22" data-name="Ethernet+VLAN（含 FCS）">Ethernet + VLAN（18+4B）</option></select></label>
     <label>载荷字节 <input id="enc-payload" type="number" value="1000" min="0" max="100000"></label>
     <label>MTU <input id="enc-mtu" type="number" value="1500" min="68" max="9000"></label>
   </div>
   <button id="enc-run" class="primary">计算封装</button>
   <div id="enc-stack" class="stack"></div>
+  <div id="enc-legend" class="legend"></div>
   <pre id="enc-result" class="result"></pre>
 </section>
 
@@ -98,7 +99,9 @@
     <button id="hs-step">下一步 ▶</button>
     <button id="hs-close">开始四次挥手</button>
     <button id="hs-reset">重置</button>
+    <span id="hs-progress" class="hint">第 0 步 · 先选握手或挥手</span>
   </div>
+  <div class="hs-lane" aria-hidden="true"><div id="hs-packet" class="hs-packet">SYN</div></div>
   <div class="hs-board">
     <div class="host"><h3>客户端</h3><div id="hs-client-state" class="state">CLOSED</div><div id="hs-client-seq" class="seq">seq = —</div></div>
     <div class="hs-log-wrap"><ol id="hs-log" class="log"></ol><p id="hs-desc" class="hint">点击「开始三次握手」后逐步推进，观察序号与状态变化。</p></div>
@@ -132,6 +135,12 @@
 <section id="panel-journey" class="panel">
   <h2>「输入 URL 到页面打开」协议之旅</h2>
   <div class="row"><input id="journey-url" value="https://example.com/index.html" size="40"><button id="journey-run" class="primary">开始旅程</button></div>
+  <div class="row">
+    <button id="journey-play">▶ 播放</button>
+    <button id="journey-prev">◀ 上一步</button>
+    <button id="journey-next">下一步 ▶</button>
+    <span id="journey-progress" class="hint"></span>
+  </div>
   <ol id="journey-list" class="journey"></ol>
 </section>
 
@@ -141,6 +150,9 @@
   <p class="hint">题目类型：协议所在层、常用端口。共 10 题。</p>
   <button id="quiz-start" class="primary">开始测验</button>
   <div id="quiz-box"></div>
+  <div id="quiz-feedback" class="quiz-feedback" hidden></div>
+  <button id="quiz-next" class="primary" hidden>下一题 ▶</button>
+  <div id="quiz-review"></div>
   <p id="quiz-score" class="score"></p>
 </section>
 </main>
